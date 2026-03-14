@@ -87,9 +87,9 @@ Analysis:"""
      no shutdown
     """
 
-    # Run chain
+    # Run chain (LLMChain.invoke returns {"text": "..."} by default)
     result = chain.invoke({"config": config})
-    print("\n" + result["text"])
+    print("\n" + result.get("text", str(result)))
 
 
 def example_2_structured_output():
@@ -143,7 +143,7 @@ Provide your analysis:"""
 
     # Run chain and parse
     result = chain.invoke({"config": config})
-    analysis = parser.parse(result["text"])
+    analysis = parser.parse(result.get("text", str(result)))
 
     print(f"\nFound {len(analysis.issues)} issues:")
     for i, issue in enumerate(analysis.issues, 1):
@@ -186,7 +186,7 @@ def example_3_chat_template():
 
     # Run
     result = chain.invoke({"config": config})
-    print("\n" + result["text"])
+    print("\n" + result.get("text", str(result)))
 
 
 def example_4_config_generation():
@@ -233,7 +233,7 @@ Configuration:"""
 
     # Generate
     result = chain.invoke({"requirements": requirements})
-    print("\n" + result["text"])
+    print("\n" + result.get("text", str(result)))
 
 
 def main():
