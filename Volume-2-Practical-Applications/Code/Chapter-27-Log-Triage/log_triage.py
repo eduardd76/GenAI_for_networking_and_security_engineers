@@ -249,7 +249,7 @@ class LogTriageClassifier:
             t1 = datetime.fromisoformat(log1.timestamp)
             t2 = datetime.fromisoformat(log2.timestamp)
             return abs((t2 - t1).total_seconds()) <= window_secs
-        except:
+        except (ValueError, TypeError):
             return False
 
     def _create_group(

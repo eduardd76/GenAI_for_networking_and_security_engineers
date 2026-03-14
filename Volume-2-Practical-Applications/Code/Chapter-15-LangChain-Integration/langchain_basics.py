@@ -88,8 +88,8 @@ Analysis:"""
     """
 
     # Run chain
-    result = chain.run(config=config)
-    print("\n" + result)
+    result = chain.invoke({"config": config})
+    print("\n" + result["text"])
 
 
 def example_2_structured_output():
@@ -142,8 +142,8 @@ Provide your analysis:"""
     """
 
     # Run chain and parse
-    result = chain.run(config=config)
-    analysis = parser.parse(result)
+    result = chain.invoke({"config": config})
+    analysis = parser.parse(result["text"])
 
     print(f"\nFound {len(analysis.issues)} issues:")
     for i, issue in enumerate(analysis.issues, 1):
@@ -185,8 +185,8 @@ def example_3_chat_template():
     """
 
     # Run
-    result = chain.run(config=config)
-    print("\n" + result)
+    result = chain.invoke({"config": config})
+    print("\n" + result["text"])
 
 
 def example_4_config_generation():
@@ -232,8 +232,8 @@ Configuration:"""
     """
 
     # Generate
-    result = chain.run(requirements=requirements)
-    print("\n" + result)
+    result = chain.invoke({"requirements": requirements})
+    print("\n" + result["text"])
 
 
 def main():

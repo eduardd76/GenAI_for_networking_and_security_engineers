@@ -180,7 +180,7 @@ class TaskQueue:
                 self.tasks[task.task_id] = task
 
             return True
-        except:
+        except Exception:
             return False
 
     def dequeue(self, timeout: float = 1.0) -> Optional[NetworkTask]:
@@ -198,7 +198,7 @@ class TaskQueue:
             task.status = TaskStatus.PROCESSING
             task.started_at = time.time()
             return task
-        except:
+        except Exception:
             return None
 
     def complete_task(self, task: NetworkTask, result: Dict[str, Any]):

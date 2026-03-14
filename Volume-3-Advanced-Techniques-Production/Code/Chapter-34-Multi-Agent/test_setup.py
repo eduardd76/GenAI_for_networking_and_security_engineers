@@ -73,7 +73,7 @@ def test_basic_functionality():
 
     try:
         from langchain_anthropic import ChatAnthropic
-        from langchain.schema import HumanMessage
+        from langchain_core.messages import HumanMessage
 
         # Create a simple LLM instance
         llm = ChatAnthropic(

@@ -16,7 +16,7 @@ from langchain_openai import OpenAIEmbeddings
 from langchain.vectorstores import Chroma
 from langchain.retrievers import BM25Retriever, EnsembleRetriever
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.schema import Document
+from langchain_core.documents import Document
 from typing import List
 
 load_dotenv()

@@ -25,11 +25,12 @@ from dataclasses import dataclass
 from anthropic import Anthropic
 from openai import OpenAI
 
-# LangChain imports
-from langchain.chat_models import ChatAnthropic, ChatOpenAI
+# LangChain imports (use dedicated provider packages, not deprecated langchain.chat_models)
+from langchain_anthropic import ChatAnthropic
+from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from langchain.chains import LLMChain, SequentialChain
-from langchain.schema import HumanMessage, SystemMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 
 
 # ============================================================================
@@ -52,7 +53,7 @@ def get_api_keys() -> Tuple[str, str]:
         anthropic_key = userdata.get('ANTHROPIC_API_KEY')
         openai_key = userdata.get('OPENAI_API_KEY')
         print("✓ Loaded API keys from Google Colab secrets")
-    except:
+    except (ImportError, Exception):
         # Fall back to environment variables
         anthropic_key = os.getenv('ANTHROPIC_API_KEY')
         openai_key = os.getenv('OPENAI_API_KEY')

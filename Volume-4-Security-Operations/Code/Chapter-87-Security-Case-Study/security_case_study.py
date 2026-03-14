@@ -31,7 +31,7 @@ except ImportError:
 # LangChain imports
 from langchain_anthropic import ChatAnthropic
 from langchain_openai import ChatOpenAI
-from langchain.schema import HumanMessage, SystemMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 
 
 class ThreatSeverity(Enum):

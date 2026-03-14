@@ -28,11 +28,12 @@ from collections import defaultdict
 from anthropic import Anthropic
 from openai import OpenAI
 
-# LangChain imports
-from langchain.chat_models import ChatAnthropic, ChatOpenAI
+# LangChain imports (use dedicated provider packages, not deprecated langchain.chat_models)
+from langchain_anthropic import ChatAnthropic
+from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate, PromptTemplate
 from langchain.chains import LLMChain, SequentialChain
-from langchain.schema import HumanMessage, SystemMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 
 
 # ============================================================================
@@ -55,7 +56,7 @@ def get_api_keys() -> Tuple[str, str]:
         anthropic_key = userdata.get('ANTHROPIC_API_KEY')
         openai_key = userdata.get('OPENAI_API_KEY')
         print("✓ Loaded API keys from Google Colab secrets")
-    except:
+    except (ImportError, Exception):
         # Fall back to environment variables
         anthropic_key = os.getenv('ANTHROPIC_API_KEY')
         openai_key = os.getenv('OPENAI_API_KEY')
@@ -259,7 +260,9 @@ JSON format:
     print("-" * 80)
     print(f"{'Threat Detection':<20} {str(claude_analysis.get('is_threat', 'N/A')):<30} {str(openai_analysis.get('severity', 'N/A') in ['Critical', 'High']):<30}")
     print(f"{'Reasoning Depth':<20} {claude_analysis.get('attacker_goal', 'N/A')[:28]:<30} {openai_analysis.get('classification', 'N/A'):<30}")
-    print(f"{'Confidence':<20} {f\"{claude_analysis.get('confidence', 0):.0%}\":<30} {f\"{openai_analysis.get('confidence', 0):.0%}\":<30}")
+    claude_conf = f"{claude_analysis.get('confidence', 0):.0%}"
+    openai_conf = f"{openai_analysis.get('confidence', 0):.0%}"
+    print(f"{'Confidence':<20} {claude_conf:<30} {openai_conf:<30}")
 
     print("\n💡 Key Insight:")
     print("  - Claude excels at explaining WHY (attacker's goal, business impact)")

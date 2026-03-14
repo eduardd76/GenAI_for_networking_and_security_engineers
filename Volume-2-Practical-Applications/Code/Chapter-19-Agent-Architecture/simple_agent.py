@@ -18,7 +18,7 @@ from typing import TypedDict, Annotated
 from langgraph.graph import StateGraph, END
 from langchain_anthropic import ChatAnthropic
 from langchain.tools import tool
-from langchain.schema import HumanMessage, AIMessage
+from langchain_core.messages import HumanMessage, AIMessage
 
 # Load environment variables
 load_dotenv()

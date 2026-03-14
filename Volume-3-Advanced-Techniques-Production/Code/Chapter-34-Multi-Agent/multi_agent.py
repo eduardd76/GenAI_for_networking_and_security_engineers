@@ -30,7 +30,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from langgraph.graph import StateGraph, END
 from langchain_anthropic import ChatAnthropic
 from langchain.tools import tool
-from langchain.schema import HumanMessage, AIMessage, SystemMessage
+from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from pydantic import BaseModel, Field
 
 # Load environment variables

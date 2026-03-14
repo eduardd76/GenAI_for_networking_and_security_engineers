@@ -360,7 +360,7 @@ Provide comprehensive path analysis.""")
         # Find downstream devices
         try:
             downstream = list(nx.descendants(self.graph, device_id))
-        except:
+        except nx.NetworkXError:
             downstream = []
 
         # Find direct neighbors
@@ -382,7 +382,7 @@ Provide comprehensive path analysis.""")
                         nx.shortest_path(temp_graph, pred, target_id)
                         has_backup = True
                         break
-                    except:
+                    except nx.NetworkXNoPath:
                         pass
 
                 redundancy_info.append({
@@ -483,7 +483,7 @@ Provide comprehensive impact analysis.""")
         # Find all ancestors (devices this depends on)
         try:
             ancestors = list(nx.ancestors(self.graph, device_id))
-        except:
+        except nx.NetworkXError:
             ancestors = []
 
         # Separate by depth
@@ -506,7 +506,7 @@ Provide comprehensive impact analysis.""")
                     nx.shortest_path(temp_graph, ancestor, device_id)
                     has_alternative = True
                     break
-                except:
+                except nx.NetworkXNoPath:
                     pass
 
             if not has_alternative:
