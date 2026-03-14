@@ -27,7 +27,7 @@ try:
     from langchain.prompts import PromptTemplate
     from langchain_anthropic import ChatAnthropic
     from langchain_openai import ChatOpenAI
-    from langchain.schema import SystemMessage, HumanMessage
+    from langchain_core.messages import SystemMessage, HumanMessage
     LANGCHAIN_AVAILABLE = True
 except ImportError:
     LANGCHAIN_AVAILABLE = False
@@ -38,7 +38,7 @@ except ImportError:
     from langchain.prompts import PromptTemplate
     from langchain_anthropic import ChatAnthropic
     from langchain_openai import ChatOpenAI
-    from langchain.schema import SystemMessage, HumanMessage
+    from langchain_core.messages import SystemMessage, HumanMessage
 
 
 # ============================================================================

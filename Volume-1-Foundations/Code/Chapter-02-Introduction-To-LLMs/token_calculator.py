@@ -1,7 +1,17 @@
 #!/usr/bin/env python3
 """
 Token Calculator for Network Engineers
-Shows how configs, logs, and queries tokenize across different models.
+
+Shows how router configs, syslog dumps, and CLI queries are broken into
+"tokens" — the billing unit for LLM APIs.
+
+Why this matters for networking:
+    A Cisco running-config is typically 200-800 tokens.  A full
+    'show tech-support' dump can be 50,000+ tokens.  Understanding
+    token counts tells you which model your budget can afford and
+    whether your config fits inside a model's context window (the
+    maximum amount of text it can process at once — like the buffer
+    size on a serial interface, but for the AI).
 
 This is the main project from Chapter 2: Introduction to LLMs.
 
@@ -26,6 +36,12 @@ except ImportError:
 
 # ---------------------------------------------------------------------------
 # Pricing (per 1M tokens, as of January 2026)
+#
+# Tokens are how LLMs measure text length — roughly 1 token ≈ 4 characters.
+# A typical Cisco 'show running-config' is ~300-500 tokens.
+# A BGP 'show ip bgp' full table can be 10,000+ tokens.
+# Pricing is split into input (what you send) and output (what the AI returns).
+# "Context" is the max tokens a model can handle at once (input + output).
 # ---------------------------------------------------------------------------
 
 PRICING = {
@@ -129,15 +145,20 @@ def get_token_breakdown(text: str) -> list:
 
 def calculate_cost(input_tokens: int, output_tokens: int, model: str) -> dict:
     """
-    Calculate cost for a given model and token counts.
-    
+    Calculate the dollar cost for a given LLM request.
+
+    Network example:
+        Sending a 500-token running-config and getting a 2,000-token
+        security audit back on Claude Haiku costs roughly $0.0026.
+        Auditing 1,000 configs/month on Haiku ≈ $2.60 total.
+
     Args:
-        input_tokens: Number of input tokens
-        output_tokens: Number of output tokens
-        model: Model name (from PRICING keys)
-    
+        input_tokens: Tokens sent to the model (your config/logs/question)
+        output_tokens: Tokens the model returns (its analysis/answer)
+        model: Model name (must be a key in the PRICING dict)
+
     Returns:
-        Dictionary with cost breakdown
+        Dict with input_cost, output_cost, total_cost, and context_limit
     """
     if model not in PRICING:
         return {"error": f"Unknown model: {model}"}
@@ -165,11 +186,16 @@ def calculate_cost(input_tokens: int, output_tokens: int, model: str) -> dict:
 
 def analyze_file(file_path: str, expected_output_tokens: int = 2000):
     """
-    Analyze a network config/log file and show tokenization + cost.
-    
+    Analyze a network config or log file: count tokens, check context-window
+    fit, and estimate per-model cost.
+
+    Useful for answering questions like:
+        "Can I send this full 'show tech' to GPT-4o, or do I need to trim it?"
+        "How much will it cost to analyse 1,000 router configs per month?"
+
     Args:
-        file_path: Path to file
-        expected_output_tokens: Estimated output tokens (for cost calc)
+        file_path: Path to a config, log, or text file
+        expected_output_tokens: Estimated AI response length (default: 2000)
     """
     # Read file
     try:

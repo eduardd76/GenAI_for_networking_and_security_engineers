@@ -16,7 +16,7 @@ from dotenv import load_dotenv
 from langchain_anthropic import ChatAnthropic
 from langchain.prompts import PromptTemplate, ChatPromptTemplate
 from langchain.chains import LLMChain
-from langchain.output_parsers import PydanticOutputParser
+from langchain_core.output_parsers import PydanticOutputParser
 from pydantic import BaseModel, Field
 from typing import List
 
@@ -87,9 +87,9 @@ Analysis:"""
      no shutdown
     """
 
-    # Run chain
-    result = chain.run(config=config)
-    print("\n" + result)
+    # Run chain (LLMChain.invoke returns {"text": "..."} by default)
+    result = chain.invoke({"config": config})
+    print("\n" + result.get("text", str(result)))
 
 
 def example_2_structured_output():
@@ -142,8 +142,8 @@ Provide your analysis:"""
     """
 
     # Run chain and parse
-    result = chain.run(config=config)
-    analysis = parser.parse(result)
+    result = chain.invoke({"config": config})
+    analysis = parser.parse(result.get("text", str(result)))
 
     print(f"\nFound {len(analysis.issues)} issues:")
     for i, issue in enumerate(analysis.issues, 1):
@@ -185,8 +185,8 @@ def example_3_chat_template():
     """
 
     # Run
-    result = chain.run(config=config)
-    print("\n" + result)
+    result = chain.invoke({"config": config})
+    print("\n" + result.get("text", str(result)))
 
 
 def example_4_config_generation():
@@ -232,8 +232,8 @@ Configuration:"""
     """
 
     # Generate
-    result = chain.run(requirements=requirements)
-    print("\n" + result)
+    result = chain.invoke({"requirements": requirements})
+    print("\n" + result.get("text", str(result)))
 
 
 def main():

@@ -2,8 +2,19 @@
 Chapter 13: Building AI-Powered REST APIs
 FastAPI Server with LLM Integration for Network Operations
 
-This script demonstrates building a production-ready REST API that integrates
-AI for network device analysis, with authentication, rate limiting, and monitoring.
+Exposes AI-powered network analysis as REST endpoints — think of it as
+building a programmable "show" command that returns AI-driven security
+audits, config reviews, and syslog analysis over HTTP.
+
+Network engineers can call these endpoints from Python scripts, Ansible
+playbooks, or even a custom NOC dashboard, the same way you'd query
+a device API or IPAM system.
+
+Includes:
+    - Bearer-token authentication (like RESTCONF uses)
+    - Per-key rate limiting (prevents runaway automation loops)
+    - Config security analysis, optimization, and compliance endpoints
+    - Syslog/log message AI analysis
 
 Author: Eduard Dulharu
 Company: vExpertAI GmbH
@@ -32,19 +43,29 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Add CORS middleware
+# Add CORS middleware — controls which web origins can call this API.
+# In networking terms, this is like an ACL for HTTP origins:
+#   allow_origins     = source IP whitelist (only these frontends can call us)
+#   allow_methods     = permitted protocols (GET and POST only, no DELETE)
+#   allow_credentials = whether to accept cookies/auth headers
+# NEVER use allow_origins=["*"] with credentials — that's the CORS equivalent
+# of "permit any any" and lets any website make authenticated requests.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:3000", "http://localhost:8080"],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 
 # Security
 security = HTTPBearer()
 
-# Rate limiting (in-memory for demo, use Redis in production)
+# Rate limiting — prevents any single API key from flooding the server.
+# Works like CIR/PIR traffic policing on a router interface:
+# each key gets a sliding window of RATE_LIMIT_WINDOW seconds, and can
+# make at most RATE_LIMIT_MAX_REQUESTS calls in that window.
+# In production, replace this in-memory dict with Redis for persistence.
 rate_limit_data = defaultdict(list)
 RATE_LIMIT_WINDOW = 60  # seconds
 RATE_LIMIT_MAX_REQUESTS = 10

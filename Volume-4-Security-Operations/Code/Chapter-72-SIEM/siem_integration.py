@@ -28,11 +28,12 @@ from collections import defaultdict
 from anthropic import Anthropic
 from openai import OpenAI
 
-# LangChain imports
-from langchain.chat_models import ChatAnthropic, ChatOpenAI
+# LangChain imports (use dedicated provider packages, not deprecated langchain.chat_models)
+from langchain_anthropic import ChatAnthropic
+from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate, PromptTemplate
 from langchain.chains import LLMChain, SequentialChain
-from langchain.schema import HumanMessage, SystemMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 
 
 # ============================================================================
@@ -42,6 +43,12 @@ from langchain.schema import HumanMessage, SystemMessage
 def get_api_keys() -> Tuple[str, str]:
     """
     Get API keys from environment or Google Colab secrets.
+
+    Network Context:
+        These keys authenticate to the LLM APIs that power the SIEM
+        analysis — similar to how RESTCONF or NETCONF needs credentials
+        to talk to a device.  Keep them out of source code the same way
+        you'd keep SNMP community strings out of a public repo.
 
     Returns:
         Tuple of (anthropic_key, openai_key)
@@ -55,7 +62,7 @@ def get_api_keys() -> Tuple[str, str]:
         anthropic_key = userdata.get('ANTHROPIC_API_KEY')
         openai_key = userdata.get('OPENAI_API_KEY')
         print("✓ Loaded API keys from Google Colab secrets")
-    except:
+    except (ImportError, Exception):
         # Fall back to environment variables
         anthropic_key = os.getenv('ANTHROPIC_API_KEY')
         openai_key = os.getenv('OPENAI_API_KEY')
@@ -78,7 +85,13 @@ def get_api_keys() -> Tuple[str, str]:
 
 @dataclass
 class FirewallDenyLog:
-    """Firewall denied connection log entry"""
+    """
+    A single firewall deny-log entry.
+
+    Maps to what you'd see in 'show logging' on an ASA or a Palo Alto
+    traffic log: source/dest IP, ports, the ACL rule that blocked it,
+    and the ingress interface.
+    """
     timestamp: datetime
     source_ip: str
     source_port: int
@@ -90,7 +103,14 @@ class FirewallDenyLog:
 
 @dataclass
 class IDSAlert:
-    """IDS/IPS alert"""
+    """
+    An IDS/IPS alert record.
+
+    Represents a Snort/Suricata-style alert with signature ID, severity
+    (1=low … 4=critical), and a payload summary — the kind of event that
+    floods a SOC dashboard and needs AI triage to separate real attacks
+    from noise.
+    """
     timestamp: datetime
     alert_id: str
     signature: str
@@ -259,7 +279,9 @@ JSON format:
     print("-" * 80)
     print(f"{'Threat Detection':<20} {str(claude_analysis.get('is_threat', 'N/A')):<30} {str(openai_analysis.get('severity', 'N/A') in ['Critical', 'High']):<30}")
     print(f"{'Reasoning Depth':<20} {claude_analysis.get('attacker_goal', 'N/A')[:28]:<30} {openai_analysis.get('classification', 'N/A'):<30}")
-    print(f"{'Confidence':<20} {f\"{claude_analysis.get('confidence', 0):.0%}\":<30} {f\"{openai_analysis.get('confidence', 0):.0%}\":<30}")
+    claude_conf = f"{claude_analysis.get('confidence', 0):.0%}"
+    openai_conf = f"{openai_analysis.get('confidence', 0):.0%}"
+    print(f"{'Confidence':<20} {claude_conf:<30} {openai_conf:<30}")
 
     print("\n💡 Key Insight:")
     print("  - Claude excels at explaining WHY (attacker's goal, business impact)")

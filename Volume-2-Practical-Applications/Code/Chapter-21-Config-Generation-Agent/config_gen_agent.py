@@ -17,7 +17,7 @@ from typing import TypedDict, List
 from langgraph.graph import StateGraph, END
 from langchain_anthropic import ChatAnthropic
 from langchain.tools import tool
-from langchain.schema import HumanMessage, SystemMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel, Field
 
 # Load environment variables

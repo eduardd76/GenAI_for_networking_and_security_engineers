@@ -12,7 +12,7 @@ Company: vExpertAI GmbH
 import os
 from dotenv import load_dotenv
 from langchain_anthropic import ChatAnthropic
-from langchain.output_parsers import PydanticOutputParser
+from langchain_core.output_parsers import PydanticOutputParser
 from pydantic import BaseModel, Field
 from typing import List, Optional
 from enum import Enum

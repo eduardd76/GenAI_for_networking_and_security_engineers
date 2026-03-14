@@ -1,9 +1,20 @@
 """
 Chapter 26: Evaluation & Testing Harness for Network AI
-Validate LLM outputs against ground truth and safety rubrics
 
-This module provides comprehensive evaluation of AI-generated network
-configurations including exact match, semantic similarity, and safety checks.
+Validates AI-generated network configurations before they reach production.
+
+Just like you would never paste an untested ACL into a core router, this
+module ensures AI-generated configs are checked against ground truth,
+safety rules, and vendor syntax before anyone runs 'copy run start'.
+
+Evaluation methods:
+    - Exact match:  Does the AI output match the reference config verbatim?
+    - Semantic:     Are the configs functionally equivalent even if formatted
+                    differently (e.g., different line order)?
+    - Rubric:       Does the config meet specific criteria (has BGP neighbor,
+                    ends with implicit deny, uses SSH not Telnet)?
+    - Safety:       Catches dangerous patterns like 'permit any any' or
+                    Telnet on VTY lines that could open security holes.
 
 Author: Eduard Dulharu
 Company: vExpertAI GmbH
@@ -60,6 +71,16 @@ class NetworkConfigEvaluator:
     """
 
     def __init__(self):
+        # Regex patterns that flag dangerous config lines an AI might generate.
+        #
+        # dangerous_permit:        Matches "permit any any" — the ACL equivalent
+        #                          of leaving the front door wide open.
+        # default_route_unfiltered: Catches a default route with no route-map,
+        #                          which can leak a full table or black-hole traffic.
+        # telnet_enabled:          Flags "transport input telnet" — cleartext
+        #                          management access, a common audit finding.
+        # weak_password:           Catches well-known default passwords
+        #                          (cisco, admin, 123) that scanners look for.
         self.safety_patterns = {
             'dangerous_permit': re.compile(r'permit\s+any\s+any', re.IGNORECASE),
             'default_route_unfiltered': re.compile(r'default.*route(?!.*route-map)', re.IGNORECASE),
@@ -163,7 +184,16 @@ class NetworkConfigEvaluator:
         return intersection / union if union > 0 else 0.0
 
     def _evaluate_criterion(self, criterion: str, output: str, vendor: str) -> bool:
-        """Evaluate single criterion."""
+        """
+        Evaluate whether the AI output satisfies a single rubric criterion.
+
+        Performs network-specific safety and content checks including:
+        - ACL safety: No 'permit any any', must end with implicit deny
+        - Management security: No Telnet on VTY lines
+        - Protocol presence: Config contains required BGP/OSPF sections
+        - Vendor syntax: Valid Cisco, Juniper, or Huawei command format
+        - Format validation: Output is well-formed JSON (for API responses)
+        """
         criterion_lower = criterion.lower()
         output_lower = output.lower()
 
@@ -218,7 +248,16 @@ class NetworkConfigEvaluator:
         rubric_max: int,
         is_safe: bool
     ) -> Tuple[str, Severity]:
-        """Generate human-readable verdict."""
+        """
+        Generate a human-readable deployment verdict.
+
+        Priority order mirrors a change-control review:
+        1. Safety failures block deployment (CRITICAL) — e.g., 'permit any any'
+        2. Exact match is an instant pass — config matches golden template
+        3. Rubric + high similarity → functionally equivalent, safe to deploy
+        4. Partial rubric pass → needs peer review before deployment
+        5. Low rubric score → send back to the AI for another attempt
+        """
 
         if not is_safe:
             return (
