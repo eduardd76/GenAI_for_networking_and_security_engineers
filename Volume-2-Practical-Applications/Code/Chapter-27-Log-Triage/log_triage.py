@@ -1,9 +1,20 @@
 """
 Chapter 27: AI-Powered Log Triage & Classification
-Classify, correlate, and prioritize network logs automatically
 
-This module demonstrates production log analysis using rule-based and
-AI-powered classification, event correlation, and incident triage.
+Automates the NOC analyst's first-pass triage of syslog messages.
+
+Instead of manually scanning thousands of syslog lines for BGP flaps,
+OSPF neighbor drops, or brute-force login attempts, this module
+classifies each message, assigns a severity, and groups related events
+into incidents — the same workflow a Tier-1 NOC engineer follows,
+but at machine speed.
+
+Pipeline:
+    1. Rule-based classification (fast, regex — handles known patterns)
+    2. AI-based fallback (catches unfamiliar log formats)
+    3. Temporal correlation (groups events within a time window)
+    4. Topological correlation (groups events across related devices)
+    5. Incident report generation (root cause, impact, recommended action)
 
 Author: Eduard Dulharu
 Company: vExpertAI GmbH
@@ -88,7 +99,21 @@ class LogTriageClassifier:
     """
 
     def __init__(self):
-        # Classification rules (pattern → category)
+        # Classification rules map regex patterns to event categories.
+        # These catch the syslog messages you see most often in the NOC:
+        #
+        #   authentication_failure  — "Failed password", "invalid credentials"
+        #                             (SSH brute-force, RADIUS rejects)
+        #   routing_protocol_event  — "BGP…Down", "OSPF…neighbor down",
+        #                             "adjacency lost" (peer flaps, area issues)
+        #   interface_event         — "interface…down", "link…loss",
+        #                             "lineproto…down" (fiber cuts, SFP failures)
+        #   resource_exhaustion     — "CPU…high", "memory…threshold",
+        #                             "buffer…full" (DDoS, routing loops)
+        #   hardware_failure        — "fan…fail", "power…supply",
+        #                             "temperature…critical" (RMA scenarios)
+        #   security_event          — "ACL…denied", "firewall…blocked",
+        #                             "intrusion…detected" (scans, policy hits)
         self.classification_rules = [
             ('authentication_failure', re.compile(
                 r'authentication\s+failed|login\s+failed|invalid\s+(password|credentials)|ssh.*failed',
@@ -116,7 +141,14 @@ class LogTriageClassifier:
             )),
         ]
 
-        # Severity mapping
+        # Severity mapping — mirrors typical NOC escalation policy:
+        #
+        #   authentication_failure  → WARNING   (investigate after N attempts)
+        #   routing_protocol_event  → ERROR     (BGP/OSPF down = traffic impact)
+        #   interface_event         → ERROR     (link down = potential outage)
+        #   resource_exhaustion     → ERROR     (high CPU = packet drops)
+        #   hardware_failure        → CRITICAL  (page the on-call engineer)
+        #   security_event          → ERROR     (ACL deny = possible attack)
         self.severity_map = {
             'authentication_failure': SeverityLevel.WARNING,
             'routing_protocol_event': SeverityLevel.ERROR,
@@ -205,14 +237,19 @@ class LogTriageClassifier:
         time_window_secs: int = 300
     ) -> List[CorrelationGroup]:
         """
-        Correlate related events into incident groups.
+        Correlate related log events into incident groups.
+
+        Works like a NOC analyst mentally grouping related alarms:
+        if BGP drops on two routers within five minutes, that's probably
+        one incident (upstream link failure), not two separate problems.
 
         Args:
             logs: Classified log events
-            time_window_secs: Time window for temporal correlation
+            time_window_secs: Max seconds between events to consider them
+                              related (default: 300 = 5 minutes)
 
         Returns:
-            List of CorrelationGroup objects
+            List of CorrelationGroup objects, each representing one incident
         """
         groups = []
         processed = set()

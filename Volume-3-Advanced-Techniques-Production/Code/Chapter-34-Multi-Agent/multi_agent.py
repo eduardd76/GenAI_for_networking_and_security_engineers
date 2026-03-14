@@ -2,22 +2,33 @@
 """
 Multi-Agent Orchestration for Network Operations
 
-Production-ready multi-agent system with specialist agents coordinated
-by a supervisor. Demonstrates parallel and sequential execution patterns
-for complex network operations.
+A team of specialist AI agents, each with a different network expertise,
+coordinated by a supervisor — like a NOC with dedicated Tier-2 engineers
+for routing, security, performance, and config management.
+
+Agent roles (think of them as specialist engineers):
+    - Supervisor:   The shift lead — reads the ticket, decides which
+                    specialists to engage, and merges their findings.
+    - Diagnosis:    The troubleshooter — checks interface counters,
+                    OSPF/BGP neighbor states, and device health to find
+                    root causes (duplex mismatch, stuck OSPF adjacency, etc.).
+    - Config:       The config engineer — generates production-ready
+                    Cisco IOS configs with security hardening baked in.
+    - Security:     The security auditor — scans for Telnet, default SNMP
+                    strings, weak passwords, and compliance gaps (PCI-DSS, CIS).
+    - Performance:  The capacity planner — analyzes CPU/memory utilization,
+                    link saturation, and traffic anomalies (DNS tunneling, scans).
+
+Execution modes:
+    - Sequential: Agents run one after another (when each depends on the previous)
+    - Parallel:   Agents run concurrently (independent assessments)
+    - Hybrid:     Mix of both (e.g., diagnose first, then security + perf in parallel)
 
 From: AI for Networking Engineers - Volume 3, Chapter 34
 Author: Eduard Dulharu
 
 Usage:
     python multi_agent.py
-
-Architecture:
-    - Supervisor Agent: Orchestrates and delegates tasks
-    - Diagnosis Agent: Network troubleshooting specialist
-    - Config Agent: Configuration generation specialist
-    - Security Agent: Security analysis specialist
-    - Performance Agent: Performance optimization specialist
 """
 
 import os
@@ -322,7 +333,10 @@ class DiagnosisAgent:
     """
     Network diagnosis specialist agent.
 
-    Focuses on troubleshooting and identifying root causes.
+    Acts like a senior troubleshooting engineer: gathers 'show interface'
+    counters, checks OSPF/BGP neighbor states, and reviews device health
+    (CPU, memory, temperature) to pinpoint root causes — duplex mismatches,
+    stuck OSPF adjacencies, routing loops, or hardware faults.
     """
 
     def __init__(self):
@@ -439,7 +453,9 @@ class ConfigAgent:
     """
     Configuration generation specialist agent.
 
-    Focuses on creating and validating network configurations.
+    Generates production-ready Cisco IOS configs from plain-English
+    requirements. Includes security hardening (SSH v2, encrypted passwords,
+    NTP auth) and validates syntax before handing back the config.
     """
 
     def __init__(self):
@@ -512,7 +528,10 @@ class SecurityAgent:
     """
     Security analysis specialist agent.
 
-    Focuses on security assessment and compliance.
+    Runs the same checks a compliance auditor would: Telnet enabled?
+    Default SNMP community strings? Weak Type-7 passwords? CDP leaking
+    topology on untrusted ports? Maps findings to PCI-DSS/SOC 2/CIS
+    benchmarks and prioritises remediation by risk score.
     """
 
     def __init__(self):
@@ -603,7 +622,11 @@ class PerformanceAgent:
     """
     Performance analysis specialist agent.
 
-    Focuses on optimization and capacity planning.
+    Monitors the metrics a capacity-planning engineer cares about:
+    CPU/memory utilization, link saturation percentages, top talkers,
+    and traffic anomalies (DNS tunneling, port scans). Provides
+    actionable recommendations like QoS tuning, memory upgrades,
+    and growth-rate forecasts so you can open POs before links saturate.
     """
 
     def __init__(self):

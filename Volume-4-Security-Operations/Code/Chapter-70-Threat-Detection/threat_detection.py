@@ -2,15 +2,24 @@
 Chapter 70: AI-Powered Threat Detection
 Dual-AI Security Analysis with LangChain
 
-Uses both Claude (Anthropic) and OpenAI for enhanced security analysis.
-Claude: Deep reasoning and complex pattern analysis for lateral movement and C2 detection
-OpenAI: Fast pattern matching and correlation for threat validation
-LangChain: Orchestration and consensus building between models
+Detects lateral movement, command-and-control (C2) beaconing, and
+credential compromise by analysing authentication logs and NetFlow
+records — the same data sources your SIEM already collects.
+
+Uses two AI models in a consensus architecture:
+    - Claude:   Deep contextual reasoning about auth patterns
+                ("this admin account never accessed the domain controller
+                before, and the source IP is a known Tor exit node")
+    - OpenAI:   Fast pattern matching against known attack signatures
+                ("this matches APT29 lateral-movement TTPs")
+    - Consensus: Only alert when BOTH models agree it's suspicious,
+                 cutting false positives the same way dual-engine
+                 antivirus scanning works.
 
 Architecture:
-- Claude analyzes authentication patterns for lateral movement with context
-- OpenAI validates findings with pattern recognition
-- LangChain chains coordinate multi-agent consensus for high-confidence detections
+    - Claude analyzes authentication patterns for lateral movement with context
+    - OpenAI validates findings with pattern recognition
+    - LangChain chains coordinate multi-agent consensus for high-confidence detections
 
 Production-ready with error handling, API key management, and Colab compatibility.
 """
@@ -76,7 +85,13 @@ def get_api_keys() -> Tuple[str, str]:
 
 @dataclass
 class AuthEvent:
-    """Represents a single authentication event"""
+    """
+    A single authentication event from syslog, RADIUS, or TACACS+.
+
+    Captures who logged in, from where, to which device, and how —
+    the building blocks for detecting lateral movement (an attacker
+    hopping from a compromised workstation to a domain controller).
+    """
     timestamp: datetime
     user: str
     source_ip: str
@@ -87,7 +102,13 @@ class AuthEvent:
 
 @dataclass
 class NetFlowRecord:
-    """Network flow record for C2 detection"""
+    """
+    A NetFlow/IPFIX record used for C2 beaconing detection.
+
+    Regular C2 beacons show up as periodic, fixed-size flows to the same
+    external IP — like a heartbeat.  The AI looks for these patterns in
+    the bytes_sent/bytes_received and timing fields.
+    """
     timestamp: datetime
     source_ip: str
     dest_ip: str
@@ -99,7 +120,13 @@ class NetFlowRecord:
 
 @dataclass
 class LoginEvent:
-    """Login attempt for credential compromise detection"""
+    """
+    A login attempt with geolocation data for impossible-travel detection.
+
+    If the same username logs in from New York and then from Tokyo 30
+    minutes later, that's physically impossible — a strong indicator of
+    credential compromise.
+    """
     timestamp: datetime
     username: str
     source_ip: str

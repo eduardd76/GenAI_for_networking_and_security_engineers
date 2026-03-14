@@ -2,7 +2,17 @@
 """
 Document Loader for Network Documentation
 
-Simple utilities to load network docs from various formats.
+Loads router configs, VLAN guides, BGP standards docs, and other network
+files so they can be fed into a RAG (Retrieval-Augmented Generation) pipeline.
+
+Think of this as the "show running-config" step, but for an AI system:
+the AI can only answer questions about configs/docs it has ingested first.
+
+Supported formats:
+    - .txt   Plain-text runbooks, SOPs, change records
+    - .md    Markdown design docs, VLAN guides, BGP standards
+    - .cfg   Cisco IOS / NX-OS running-config exports
+    - .conf  Juniper / Linux-style config files
 
 From: AI for Networking Engineers - Volume 2, Chapter 14
 Author: Eduard Dulharu
@@ -19,13 +29,17 @@ from typing import List, Dict
 
 def load_text_file(file_path: str) -> Dict[str, str]:
     """
-    Load a text file.
+    Load a plain-text file (runbooks, SOPs, change-control records).
+
+    Network Context:
+        Use for plain-text exports like 'show tech-support' dumps,
+        change-window notes, or vendor release notes.
 
     Args:
         file_path: Path to text file
 
     Returns:
-        Dict with 'content' and 'metadata'
+        Dict with 'content' (full file text) and 'metadata' (source path, type)
     """
     with open(file_path, 'r', encoding='utf-8') as f:
         content = f.read()
@@ -42,13 +56,19 @@ def load_text_file(file_path: str) -> Dict[str, str]:
 
 def load_markdown_file(file_path: str) -> Dict[str, str]:
     """
-    Load a markdown file.
+    Load a markdown file and extract its title.
+
+    Network Context:
+        Ideal for structured design documents — VLAN numbering schemes,
+        BGP peering policies, OSPF area maps, or ACL naming conventions.
+        The extracted title helps the RAG system label search results
+        (e.g., "BGP Configuration Standards").
 
     Args:
         file_path: Path to .md file
 
     Returns:
-        Dict with 'content' and 'metadata'
+        Dict with 'content', and 'metadata' including extracted title
     """
     with open(file_path, 'r', encoding='utf-8') as f:
         content = f.read()
@@ -73,13 +93,19 @@ def load_markdown_file(file_path: str) -> Dict[str, str]:
 
 def load_config_file(file_path: str) -> Dict[str, str]:
     """
-    Load a network config file.
+    Load a network device configuration file and extract the hostname.
+
+    Network Context:
+        Parses Cisco IOS-style configs (.cfg) or Linux/Juniper-style
+        configs (.conf). Automatically pulls the 'hostname' line so
+        the RAG system can tag configs by device
+        (e.g., "CORE-RTR-01", "EDGE-SW-02").
 
     Args:
         file_path: Path to config file (.cfg, .conf, etc.)
 
     Returns:
-        Dict with 'content' and 'metadata'
+        Dict with 'content', and 'metadata' including extracted hostname
     """
     with open(file_path, 'r', encoding='utf-8') as f:
         content = f.read()
@@ -104,14 +130,22 @@ def load_config_file(file_path: str) -> Dict[str, str]:
 
 def load_docs_from_directory(directory: str, extensions: List[str] = None) -> List[Dict]:
     """
-    Load all documents from a directory.
+    Recursively load all network documents from a directory.
+
+    Network Context:
+        Point this at a folder of exported configs, runbooks, and design docs.
+        It walks subdirectories, so you can organise by site or device role:
+            network_docs/
+              dc1/core-rtr-01.cfg
+              dc1/bgp-policy.md
+              dc2/edge-sw-01.cfg
 
     Args:
         directory: Path to directory
-        extensions: List of file extensions to load (default: ['.txt', '.md', '.cfg', '.conf'])
+        extensions: File extensions to include (default: ['.txt', '.md', '.cfg', '.conf'])
 
     Returns:
-        List of document dicts
+        List of document dicts ready for chunking and embedding
     """
     if extensions is None:
         extensions = ['.txt', '.md', '.cfg', '.conf']
@@ -148,7 +182,10 @@ def load_docs_from_directory(directory: str, extensions: List[str] = None) -> Li
 
 def create_sample_docs(output_dir: str = "./sample_network_docs"):
     """
-    Create sample network documentation files for testing.
+    Create sample network documentation files for testing the loader.
+
+    Generates a VLAN guide, BGP standards doc, and a Cisco router config
+    so you can try the loader without real production files.
 
     Args:
         output_dir: Directory to create sample files in

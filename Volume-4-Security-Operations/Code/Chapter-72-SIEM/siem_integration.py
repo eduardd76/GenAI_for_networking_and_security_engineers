@@ -44,6 +44,12 @@ def get_api_keys() -> Tuple[str, str]:
     """
     Get API keys from environment or Google Colab secrets.
 
+    Network Context:
+        These keys authenticate to the LLM APIs that power the SIEM
+        analysis — similar to how RESTCONF or NETCONF needs credentials
+        to talk to a device.  Keep them out of source code the same way
+        you'd keep SNMP community strings out of a public repo.
+
     Returns:
         Tuple of (anthropic_key, openai_key)
 
@@ -79,7 +85,13 @@ def get_api_keys() -> Tuple[str, str]:
 
 @dataclass
 class FirewallDenyLog:
-    """Firewall denied connection log entry"""
+    """
+    A single firewall deny-log entry.
+
+    Maps to what you'd see in 'show logging' on an ASA or a Palo Alto
+    traffic log: source/dest IP, ports, the ACL rule that blocked it,
+    and the ingress interface.
+    """
     timestamp: datetime
     source_ip: str
     source_port: int
@@ -91,7 +103,14 @@ class FirewallDenyLog:
 
 @dataclass
 class IDSAlert:
-    """IDS/IPS alert"""
+    """
+    An IDS/IPS alert record.
+
+    Represents a Snort/Suricata-style alert with signature ID, severity
+    (1=low … 4=critical), and a payload summary — the kind of event that
+    floods a SOC dashboard and needs AI triage to separate real attacks
+    from noise.
+    """
     timestamp: datetime
     alert_id: str
     signature: str
