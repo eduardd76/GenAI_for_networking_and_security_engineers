@@ -22,7 +22,7 @@ from typing import List, Dict, Optional, Tuple
 from enum import Enum
 from dotenv import load_dotenv
 from langchain_anthropic import ChatAnthropic
-from langchain.output_parsers import PydanticOutputParser
+from langchain_core.output_parsers import PydanticOutputParser
 from langchain.prompts import PromptTemplate
 from pydantic import BaseModel, Field
 

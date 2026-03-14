@@ -18,7 +18,7 @@ from enum import Enum
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from langchain_anthropic import ChatAnthropic
-from langchain.output_parsers import PydanticOutputParser
+from langchain_core.output_parsers import PydanticOutputParser
 from pydantic import BaseModel, Field
 
 load_dotenv()
